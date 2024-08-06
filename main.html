@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+</html>
+
+    
+ 
+
+
+<div class="main">
+    <h1>Calculadora INCC-M</h1>
+    <form action=""  id="form" class="form_main">
+        
+        <input type="text" class="date" maxlength="7" placeholder="Data de Contrato " id="dataInicial" required />
+        <input type="text" name="" id="valorInicial" placeholder="Valor da primeira parcela" required>
+        
+        <button > Calcular</button>
+    </form>
+</div>
+<div id="resultadosinccm"></div>
+</body>
+<style>.main{
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    background-color: #010101;
+    border: 1px solid #D7D7D7;
+    border-radius: 20px;
+    padding: 40px
+}
+
+.main h1 {
+    font-family: Barlow Condensed;
+    text-align: center;
+    color: white;
+    margin-bottom: 28px
+}
+
+button {
+    background-color:#FDCB01;
+    color: black;
+    width: 100%;
+    border: none;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color:white;
+    color: black;
+}
+
+.form_main{
+    font-family: Sora;
+    
+}
+
+@media only screen and (max-width: 400px) {
+    .main h1 {
+    font-family: Barlow Condensed;
+    font-size: 28px;
+    text-align: center;
+    color: white;
+    margin-bottom: 28px
+    }
+    .main {
+        padding: 30px;
+    }
+}
+
+#resultadosinccm {
+    visibility: hidden;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #D7D7D7;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 100%;
+    margin: 0 auto;
+    margin-top: 20px;
+    background-color: white;
+}
+
+p {
+    font-family: Barlow Condensed;
+    font-size: 18px;
+}</style>
+<script>
+
+var input = document.querySelectorAll('.date')[0];
+
+var date = function date(elm) {
+elm.addEventListener('keypress', function(e) {
+  if(e.keyCode < 47 || e.keyCode > 57) {
+    e.preventDefault();
+  }
+  
+  var len = elm.value.length;
+  
+  // deixar o usuario digitar a /
+  if(len !== 1 ) {
+      //se for a / digitada 
+    if(e.keyCode == 47) {
+      e.preventDefault();
+    }
+  }
+  
+  // Adiciona a / para o user depois do mês
+  if(len === 2) {
+    elm.value += '/';
+  }
+
+  
+  
+});
+};
+
+date(input);
+
+const secaoParaMostrarParcelas = document.getElementById("resultadosinccm")
+const form = document.getElementById('form')
+const valorInicial = document.getElementById('valorInicial')
+const dataInicial = document.getElementById('dataInicial')
+const valores = []
+const selectedMonths = []
+
+
+let month = 0
+let year = 0
+
+
+
+  form.addEventListener('submit', e => {
+    e.preventDefault()
+    fazcalculo()
+  } )
+
+async function pegaDados(){
+  //valor 1 * primeiro mes taxa ->  joga valor em uma lista pode ser
+  // pega ultimo valor da lista, +1 no mes / lista de taxas do proximo mes
+  // faz a mesma coisa até chega no date month and year, função pra pegar a data atual de hoje
+  
+  //pega valores dos campos do form
+  x = valorInicial.value
+  valores.push(Number(x))
+  console.log(valores[0])
+
+  y = dataInicial.value
+
+  //trata eles para pegar os numeros necessarios para acessar dentro do array a data inicial
+  month = y.slice(0,2) - 1
+  year = y.slice(3)
+  
+
+  //pega o ano atual para comparação
+  const data = new Date()
+  let anoAtual = data.getFullYear()
+  
+  //se o ano for maior ou menor que o intervalo de anos na planilha avisar
+  if(year < 2020  || year > anoAtual  || month < 0 || month > 11){
+    alert("Digite uma data válida - 01/2020 - data atual - ")
+  } else{
+
+    //cria a url e faz um Get request para o endpoint
+    const url = "https://script.google.com/macros/s/AKfycbx8sZSiBcm3wfSnn8p9u7tHeONH3nR04NP9y6V-iTYWuo-gC_3ieMoVqsuoa2nFILRqRA/exec"
+
+    //pega o retorno do fetch esperando com o await e trata os dados de json para javascript
+    const dados = await fetch(url)
+    const dadosJson = await dados.json()
+
+    
+
+   
+    //para cada ano faça
+   for ( year; year <= anoAtual; year++){
+    //pega o ultima numero do ano
+   let yearSliced = String(year).slice(3);
+    //for para cada mes faça
+      for( month; month < 12; month++){
+        //pega a partir do ano e mes até o final
+        if( dadosJson[yearSliced][month] > 0 || dadosJson[yearSliced][month] == "Valor não informado" ){
+            selectedMonths.push(dadosJson[yearSliced][month])
+        }
+        
+        //console.log(dadosJson[yearSliced][month])
+      }
+    month = 0
+    
+    yearSliced = yearSliced++
+    
+    
+   }
+   console.log(selectedMonths)
+   return selectedMonths
+
+  }
+
+  
+ 
+  
+
+
+ // console.log(x , y)
+ // x = x + (x * (taxasMes[0] /100))
+
+  //console.log(x)
+
+
+ 
+
+
+}
+
+//cria secao onde valores iram ser renderizados e passa o id
+/*
+  let secao = document.createElement('div')
+  secao.setAttribute("id", "quadrado");
+  document.body.appendChild(secao)
+/*
+  let resultadosDiv = document.getElementById("secaoValor")
+  document.body.appendChild(resultadosDiv)
+*/
+
+let resultadosDiv = document.getElementById("resultadosinccm")
+
+
+
+const taxas = [ ]
+let mes = 0
+let ano = 0
+
+function sincMonth(){
+    mes = Number(dataInicial.value.slice(0,2))
+    ano = Number(dataInicial.value.slice(3))
+    console.log( ano)
+    console.log(mes)
+for ( let taxa in selectedMonths){
+  if ( mes > 12){
+    ano += 1
+    mes = 1
+
+  }
+  taxas.push("Parcela "+ mes + "/" + ano)
+  taxa = "Parcela "+ mes + "/" + ano +  " -- " + selectedMonths[taxa]
+  console.log(taxa)
+  mes += 1
+}
+
+
+}
+
+async function fazcalculo(){
+
+let retorno = await pegaDados()
+console.log(selectedMonths.length)
+secaoParaMostrarParcelas.style.visibility = "visible"
+//calculo
+  //Parcela mês (ex R$2.000,00 + Incc-M 0.25%)  = R$ 2.005,00
+  //No próximo mês e 2.005,00 + a incc do mês …
+
+  
+  //pega o id da secao e seta como " " o html para limpar toda vez que for calculado
+  //document.getElementById('quadrado').innerHTML = ''
+
+document.getElementById('resultadosinccm').innerHTML = ''
+
+sincMonth()
+
+  for( let i=0; i < selectedMonths.length; i++){
+
+      let parcelaMes = 0
+      console.log(i)
+      
+          //console.log('calculando!')
+          parcelaMes = valores[i] + (valores[i] * (selectedMonths[i]/100))
+          valores.push(parcelaMes)
+      
+          //cria a secao da parcela
+          let secaoValor = document.createElement("p");
+          //cria valor da parcela, texto que ira nela e append dentro da secao
+        if(selectedMonths[i] != "Valor não informado"){
+            let valor = document.createTextNode( taxas[i] + " - R$" +  valores[i].toFixed(2)
+          + " - INCC-M (FGV) " + selectedMonths[i] + "%");
+          secaoValor.appendChild(valor);
+        }
+        else {
+            let valor = document.createTextNode( taxas[i] + " - R$" +  valores[i].toFixed(2)
+          + " - INCC-M (FGV) " + selectedMonths[i] );
+          secaoValor.appendChild(valor);
+        }
+
+          
+        // joga a secao com o valor da parcela na secao maior da lista de parcelas
+          
+        resultadosDiv.appendChild(secaoValor)
+    console.log(valores[i])
+  }
+  
+
+//zera os arrays de valores e eses
+  valores.length = 0
+  selectedMonths.length = 0
+
+}
+</script>
